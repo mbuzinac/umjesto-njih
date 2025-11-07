@@ -1,14 +1,19 @@
 <template>
-  <header class="border-b border-slate-200 bg-white/90 backdrop-blur">
+  <header class="sticky top-0 z-40 border-b border-white/30 bg-white/80 backdrop-blur">
     <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-      <NuxtLink to="/" class="flex items-center gap-2 text-lg font-semibold text-primary">
-        <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-base font-bold">UN</span>
-        <span>Umjesto njih</span>
+      <NuxtLink to="/" class="group flex items-center gap-3 text-lg font-semibold text-primary">
+        <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/25">
+          🏛️
+        </span>
+        <div class="leading-tight">
+          <span class="block text-sm uppercase tracking-[0.3em] text-primary/60">Vukovar</span>
+          <span class="block text-xl font-bold text-primary group-hover:text-[#0c3b85]">Umjesto njih</span>
+        </div>
       </NuxtLink>
-      <nav class="flex items-center gap-4 text-sm font-medium">
-        <NuxtLink to="/" class="hover:text-primary">Početna</NuxtLink>
-        <NuxtLink to="/branitelji" class="hover:text-primary">Branitelji</NuxtLink>
-        <NuxtLink to="/admin" class="hover:text-primary">Admin</NuxtLink>
+      <nav class="flex items-center gap-6 text-sm font-medium text-navy/70">
+        <NuxtLink to="/" class="transition hover:text-primary">Početna</NuxtLink>
+        <NuxtLink to="/branitelji" class="transition hover:text-primary">Branitelji</NuxtLink>
+        <NuxtLink to="/admin" class="transition hover:text-primary">Admin</NuxtLink>
       </nav>
     </div>
   </header>

@@ -1,8 +1,11 @@
 <template>
-  <footer class="border-t border-slate-200 bg-white/80">
-    <div class="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 px-4 py-6 text-center text-sm text-slate-500 sm:flex-row sm:px-6 lg:px-8">
-      <p>&copy; {{ new Date().getFullYear() }} Umjesto njih. Sva prava pridržana.</p>
-      <p class="text-slate-400">Digitalna memorijalna platforma za branitelje.</p>
+  <footer class="border-t border-white/40 bg-gradient-to-r from-white via-[#f6f8fb] to-white">
+    <div class="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-8 text-center text-sm text-navy/60 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      <div class="space-y-1">
+        <p class="font-semibold text-primary">&copy; {{ new Date().getFullYear() }} Umjesto njih – Vukovar</p>
+        <p>Čuvamo imena i priče vukovarskih branitelja.</p>
+      </div>
+      <p class="text-xs uppercase tracking-[0.3em] text-primary/50">Za nas živote dali</p>
     </div>
   </footer>
 </template>

@@ -8,6 +8,7 @@ export interface Defender {
   mjesto_pogibije: string
   fotka_url: string
   jedinica: string
+  status?: string | null
 }
 
 export type MemoryStatus = 'pending' | 'approved' | 'rejected'

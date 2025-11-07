@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,18 +8,61 @@
   :root {
     color-scheme: light;
   }
+
   body {
-    @apply bg-slate-50 text-slate-900;
+    @apply bg-gradient-to-b from-[#f6f8fb] via-[#edf1f8] to-[#eef2f6] text-navy;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: 'Merriweather', Georgia, serif;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-900;
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition hover:bg-[#0c3b85] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-900;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-primary/20 bg-white px-6 py-2 text-sm font-semibold text-primary shadow-sm transition hover:border-primary/40 hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+  }
+
+  .badge-soft {
+    @apply inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-primary;
+  }
+
+  .filter-card {
+    @apply rounded-3xl border border-primary/10 bg-white/90 p-6 shadow-lg shadow-primary/10 backdrop-blur;
+  }
+
+  .input-field {
+    @apply w-full rounded-2xl border-2 border-primary/15 bg-white px-4 py-2.5 text-sm text-navy shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30;
+  }
+
+  .input-field--with-icon {
+    @apply pl-10;
+  }
+
+  .select-field {
+    @apply w-full appearance-none rounded-2xl border-2 border-primary/15 bg-white px-4 py-2.5 text-sm text-navy shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30;
+  }
+
+  .select-arrow {
+    @apply pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-primary/40;
   }
 }
 
+select::-ms-expand {
+  display: none;
+}
+
+select {
+  background-image: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}

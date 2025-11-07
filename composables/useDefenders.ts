@@ -1,12 +1,12 @@
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useFetch } from 'nuxt/app'
 import type { Defender } from '~/types/models'
 
 interface DefenderFilters {
-  ime?: string
-  prezime?: string
-  jedinica?: string
+  query?: string
+  jedinica?: string | null
   godina_pogibije?: number | null
+  status?: string | null
 }
 
 export const useDefenders = () => {
@@ -14,6 +14,8 @@ export const useDefenders = () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const filters = reactive<DefenderFilters>({})
+  const pageSize = ref(18)
+  const currentPage = ref(1)
 
   const fetchDefenders = async () => {
     loading.value = true
@@ -34,29 +36,63 @@ export const useDefenders = () => {
 
   const filteredDefenders = computed(() => {
     return defenders.value.filter((defender: Defender) => {
-      const matchesIme = filters.ime
-        ? defender.ime.toLowerCase().includes(filters.ime.toLowerCase())
+      const normalizedIme = defender.ime?.toLowerCase() ?? ''
+      const normalizedPrezime = defender.prezime?.toLowerCase() ?? ''
+
+      const matchesQuery = filters.query
+        ? `${normalizedIme} ${normalizedPrezime}`.includes(filters.query.toLowerCase().trim())
         : true
-      const matchesPrezime = filters.prezime
-        ? defender.prezime.toLowerCase().includes(filters.prezime.toLowerCase())
-        : true
+
       const matchesJedinica = filters.jedinica
-        ? defender.jedinica.toLowerCase().includes(filters.jedinica.toLowerCase())
+        ? defender.jedinica
+          ? defender.jedinica.toLowerCase().includes(filters.jedinica.toLowerCase())
+          : false
         : true
+
       const matchesGodina = filters.godina_pogibije
         ? defender.godina_pogibije === filters.godina_pogibije
         : true
 
-      return matchesIme && matchesPrezime && matchesJedinica && matchesGodina
+      const matchesStatus = filters.status
+        ? defender.status
+          ? defender.status.toLowerCase() === filters.status.toLowerCase()
+          : false
+        : true
+
+      return matchesQuery && matchesJedinica && matchesGodina && matchesStatus
     })
   })
+
+  const totalPages = computed(() => Math.ceil(filteredDefenders.value.length / pageSize.value) || 1)
+
+  const paginatedDefenders = computed(() => {
+    const start = (currentPage.value - 1) * pageSize.value
+    return filteredDefenders.value.slice(start, start + pageSize.value)
+  })
+
+  watch(
+    () => ({
+      query: filters.query,
+      jedinica: filters.jedinica,
+      godina_pogibije: filters.godina_pogibije,
+      status: filters.status,
+      total: filteredDefenders.value.length
+    }),
+    () => {
+      currentPage.value = 1
+    }
+  )
 
   return {
     defenders,
     loading,
     error,
     filters,
+    pageSize,
+    currentPage,
+    totalPages,
     filteredDefenders,
+    paginatedDefenders,
     fetchDefenders
   }
 }

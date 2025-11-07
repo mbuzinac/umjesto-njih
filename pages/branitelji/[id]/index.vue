@@ -43,23 +43,69 @@ await fetchMemories()
           <h1 class="text-4xl font-bold text-slate-900">
             {{ defender.ime }} {{ defender.prezime }}
           </h1>
-          <p class="text-lg text-slate-600">
-            {{ defender.godina_rođenja || '????' }} — {{ defender.godina_pogibije || '????' }}
-          </p>
+          <ClientOnly>
+            <template #fallback>
+              <p class="text-lg text-slate-600">
+                {{ defender.godina_rođenja ?? '—' }} — {{ defender.godina_pogibije ?? '—' }}
+              </p>
+            </template>
+            <p
+              class="text-lg text-slate-600"
+              v-tooltip.bottom="`Godina rođenja: ${defender.godina_rođenja || 'n/a'} • Godina pogibije: ${defender.godina_pogibije || 'n/a'}`"
+            >
+              {{ defender.godina_rođenja ?? '—' }} — {{ defender.godina_pogibije ?? '—' }}
+            </p>
+          </ClientOnly>
         </div>
         <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <dl class="grid gap-4 sm:grid-cols-2">
             <div>
               <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Mjesto rođenja</dt>
-              <dd class="text-base text-slate-800">{{ defender.mjesto_rođenja || 'Nepoznato' }}</dd>
+              <ClientOnly>
+                <template #fallback>
+                  <dd class="text-base text-slate-800">
+                    {{ defender.mjesto_rođenja || '—' }}
+                  </dd>
+                </template>
+                <dd
+                  class="text-base text-slate-800"
+                  v-tooltip.bottom="defender.mjesto_rođenja ? `Mjesto rođenja: ${defender.mjesto_rođenja}` : 'Mjesto rođenja nepoznato'"
+                >
+                  {{ defender.mjesto_rođenja || '—' }}
+                </dd>
+              </ClientOnly>
             </div>
             <div>
               <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Mjesto pogibije</dt>
-              <dd class="text-base text-slate-800">{{ defender.mjesto_pogibije || 'Nepoznato' }}</dd>
+              <ClientOnly>
+                <template #fallback>
+                  <dd class="text-base text-slate-800">
+                    {{ defender.mjesto_pogibije || '—' }}
+                  </dd>
+                </template>
+                <dd
+                  class="text-base text-slate-800"
+                  v-tooltip.bottom="defender.mjesto_pogibije ? `Mjesto pogibije: ${defender.mjesto_pogibije}` : 'Mjesto pogibije nepoznato'"
+                >
+                  {{ defender.mjesto_pogibije || '—' }}
+                </dd>
+              </ClientOnly>
             </div>
             <div>
               <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Jedinica</dt>
-              <dd class="text-base text-slate-800">{{ defender.jedinica || 'Nepoznato' }}</dd>
+              <ClientOnly>
+                <template #fallback>
+                  <dd class="text-base text-slate-800">
+                    {{ defender.jedinica || '—' }}
+                  </dd>
+                </template>
+                <dd
+                  class="text-base text-slate-800"
+                  v-tooltip.bottom="defender.jedinica ? `Jedinica: ${defender.jedinica}` : 'Jedinica nepoznata'"
+                >
+                  {{ defender.jedinica || '—' }}
+                </dd>
+              </ClientOnly>
             </div>
           </dl>
         </div>

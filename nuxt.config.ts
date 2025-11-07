@@ -6,7 +6,12 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-08-01',
   devtools: { enabled: true },
   modules: ['@nuxtjs/tailwindcss'],
-  css: ['~/assets/css/tailwind.css'],
+  css: [
+    '~/assets/css/tailwind.css',
+    'primevue/resources/themes/lara-light-blue/theme.css',
+    'primevue/resources/primevue.css',
+    'primeicons/primeicons.css'
+  ],
   app: {
     head: {
       title: 'Umjesto njih',
