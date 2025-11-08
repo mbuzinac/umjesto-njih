@@ -23,6 +23,10 @@ export default defineNuxtConfig({
       title: 'Umjesto njih',
       meta: [
         { name: 'description', content: 'Digitalna memorijalna platforma branitelja.' }
+      ],
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg?v=3' },
+        { rel: 'shortcut icon', type: 'image/svg+xml', href: '/favicon.svg?v=3' }
       ]
     }
   },

@@ -16,7 +16,7 @@ const { data: countData, pending } = await useFetch<{ total: number }>('/api/def
         <div class="space-y-6">
           <span class="badge-soft bg-white/10 text-white">SJEĆANJE NA VUKOVAR</span>
           <h1 class="text-4xl font-bold text-white sm:text-5xl">
-            Umjesto njih – digitalna memorija vukovarskih branitelja
+            Umjesto Njih  - digitalna memorija vukovarskih branitelja
           </h1>
           <p class="text-base text-white/80 sm:text-lg">
             Čuvamo imena, priče i žrtvu onih koji su branili grad heroj. Svatko može ostaviti sjećanje, fotografiju
@@ -43,7 +43,7 @@ const { data: countData, pending } = await useFetch<{ total: number }>('/api/def
 
     <section class="grid gap-8 rounded-3xl bg-white/90 p-10 shadow-xl shadow-primary/10 lg:grid-cols-3">
       <div class="flex flex-col gap-3">
-        <h2 class="text-xl font-semibold text-primary">Zašto “Umjesto njih”?</h2>
+        <h2 class="text-xl font-semibold text-primary">Zašto “Umjesto Njih”?</h2>
         <p class="text-sm text-navy/70">
           Branitelji su stajali umjesto nas. Ova platforma omogućuje da njihova imena nikada ne zašute,
           a da nove generacije razumiju cijenu slobode.
