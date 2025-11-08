@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import Dialog from 'primevue/dialog'
+import InputText from 'primevue/inputtext'
 import type { Defender } from '~/types/models'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 
@@ -9,6 +11,16 @@ const defenders = ref<Defender[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const editingId = ref<string | null>(null)
+const currentPage = ref(1)
+const pageSize = ref(18)
+const total = ref(0)
+const searchQuery = ref('')
+const showFormModal = ref(false)
+const showDeleteDialog = ref(false)
+const defenderToDelete = ref<Defender | null>(null)
+const modalTitle = computed(() => (editingId.value ? 'Uredi branitelja' : 'Dodaj novog branitelja'))
+
+let searchDebounce: ReturnType<typeof setTimeout> | null = null
 
 const form = reactive({
   ime: '',
@@ -33,19 +45,67 @@ const resetForm = () => {
   editingId.value = null
 }
 
+const openCreateModal = () => {
+  resetForm()
+  showFormModal.value = true
+}
+
+const closeFormModal = () => {
+  showFormModal.value = false
+}
+
 const { adminFetch } = useAdminAuth()
 
 const loadDefenders = async () => {
   loading.value = true
   error.value = null
   try {
-    defenders.value = await adminFetch<Defender[]>('/api/defenders')
+    const params = new URLSearchParams({
+      page: String(currentPage.value),
+      pageSize: String(pageSize.value)
+    })
+    const trimmedQuery = searchQuery.value.trim()
+    if (trimmedQuery) {
+      params.set('q', trimmedQuery)
+    }
+    const response = await adminFetch<{
+      items: Defender[]
+      total: number
+      page: number
+      pageSize: number
+    }>(`/api/defenders?${params.toString()}`)
+    const maxPage = response.total ? Math.ceil(response.total / response.pageSize) : 1
+    if (response.page > maxPage && maxPage !== currentPage.value) {
+      currentPage.value = Math.max(1, maxPage)
+      await loadDefenders()
+      return
+    }
+    defenders.value = response.items
+    total.value = response.total
+    if (response.page !== currentPage.value) {
+      currentPage.value = response.page
+    }
+    if (response.pageSize !== pageSize.value) {
+      pageSize.value = response.pageSize
+    }
   } catch (err) {
     error.value = (err as Error).message
   } finally {
     loading.value = false
   }
 }
+
+watch(searchQuery, () => {
+  if (searchDebounce) {
+    clearTimeout(searchDebounce)
+  }
+  searchDebounce = setTimeout(() => {
+    if (currentPage.value !== 1) {
+      currentPage.value = 1
+    }
+    loadDefenders()
+  }, 300)
+})
 
 const submit = async () => {
   loading.value = true
@@ -75,7 +135,7 @@ const submit = async () => {
       })
     }
     await loadDefenders()
-    resetForm()
+    closeFormModal()
   } catch (err) {
     error.value = (err as Error).message
   } finally {
@@ -93,17 +153,29 @@ const editDefender = (defender: Defender) => {
   form.mjesto_pogibije = defender.mjesto_pogibije
   form.fotka_url = defender.fotka_url
   form.jedinica = defender.jedinica
+  showFormModal.value = true
 }
 
-const deleteDefender = async (id: string) => {
-  if (!confirm('Sigurno obrisati branitelja?')) {
+const promptDelete = (defender: Defender) => {
+  defenderToDelete.value = defender
+  showDeleteDialog.value = true
+}
+
+const cancelDelete = () => {
+  defenderToDelete.value = null
+  showDeleteDialog.value = false
+}
+
+const performDelete = async () => {
+  if (!defenderToDelete.value) {
     return
   }
   loading.value = true
   error.value = null
   try {
-    await adminFetch(`/api/defenders/${id}`, { method: 'DELETE' })
+    await adminFetch(`/api/defenders/${defenderToDelete.value.id}`, { method: 'DELETE' })
     await loadDefenders()
+    cancelDelete()
   } catch (err) {
     error.value = (err as Error).message
   } finally {
@@ -111,24 +183,117 @@ const deleteDefender = async (id: string) => {
   }
 }
 
+const totalPages = computed(() => (total.value ? Math.ceil(total.value / pageSize.value) : 1))
+
+const from = computed(() => {
+  if (!total.value) {
+    return 0
+  }
+  return (currentPage.value - 1) * pageSize.value + 1
+})
+
+const to = computed(() => {
+  if (!total.value) {
+    return 0
+  }
+  return Math.min(currentPage.value * pageSize.value, total.value)
+})
+
+const handlePageChange = (event: { page: number; rows: number }) => {
+  const nextPage = event.page + 1
+  const nextPageSize = event.rows
+  if (currentPage.value !== nextPage || pageSize.value !== nextPageSize) {
+    currentPage.value = nextPage
+    pageSize.value = nextPageSize
+    loadDefenders()
+  }
+}
+
 onMounted(() => {
   loadDefenders()
+})
+
+onBeforeUnmount(() => {
+  if (searchDebounce) {
+    clearTimeout(searchDebounce)
+  }
 })
 </script>
 
 <template>
   <div class="flex flex-col gap-8">
-    <header class="flex items-center justify-between">
+    <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 class="text-2xl font-semibold text-slate-900">Branitelji</h1>
         <p class="text-sm text-slate-500">Dodaj, ažuriraj ili obriši zapise branitelja.</p>
       </div>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+        <InputText v-model="searchQuery" placeholder="Pretraži branitelje…" class="w-full sm:w-64" />
+        <button type="button" class="btn-primary w-full sm:w-auto" @click="openCreateModal">Dodaj branitelja</button>
+      </div>
     </header>
 
-    <section class="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-      <h2 class="mb-4 text-lg font-semibold text-slate-900">
-        {{ editingId ? 'Uredi branitelja' : 'Dodaj novog branitelja' }}
-      </h2>
+    <section>
+      <div v-if="loading" class="rounded-2xl border border-slate-200 bg-slate-50 p-10 text-center text-slate-500">Učitavanje…</div>
+      <div v-else-if="error" class="rounded-2xl border border-rose-200 bg-rose-50 p-10 text-center text-rose-700">{{ error }}</div>
+      <div v-else class="rounded-2xl border border-slate-200">
+        <div class="flex flex-col gap-2 border-b border-slate-200 bg-slate-100 px-4 py-3 text-xs uppercase tracking-wide text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <span>
+            Prikazano
+            <strong>{{ from }}–{{ to }}</strong>
+            od <strong>{{ total }}</strong> zapisa
+          </span>
+          <span class="font-semibold text-slate-600">Stranica {{ currentPage }} / {{ totalPages }}</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-200 text-sm">
+            <thead class="bg-slate-100 text-xs uppercase tracking-wide text-slate-500">
+              <tr>
+                <th class="px-4 py-3 text-left">Ime i prezime</th>
+                <th class="px-4 py-3 text-left">God.</th>
+                <th class="px-4 py-3 text-left">Jedinica</th>
+                <th class="px-4 py-3 text-left">Akcije</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 bg-white">
+              <tr v-if="!defenders.length">
+                <td colspan="4" class="px-4 py-6 text-center text-slate-500">Nema dostupnih zapisa.</td>
+              </tr>
+              <tr v-for="defender in defenders" :key="defender.id" class="hover:bg-slate-50">
+                <td class="px-4 py-3 text-slate-800">{{ defender.ime }} {{ defender.prezime }}</td>
+                <td class="px-4 py-3 text-slate-500">
+                  {{ defender.godina_rođenja || '—' }} / {{ defender.godina_pogibije || '—' }}
+                </td>
+                <td class="px-4 py-3 text-slate-500">{{ defender.jedinica || '—' }}</td>
+                <td class="px-4 py-3">
+                  <div class="flex gap-2">
+                    <button type="button" class="btn-secondary px-3 py-1 text-xs" @click="editDefender(defender)">Uredi</button>
+                    <button
+                      type="button"
+                      class="btn-secondary px-3 py-1 text-xs text-rose-600"
+                      @click="promptDelete(defender)"
+                    >
+                      Briši
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-if="total" class="flex justify-center border-t border-slate-200 bg-white px-4 py-3">
+          <Paginator
+            :first="(currentPage - 1) * pageSize"
+            :rows="pageSize"
+            :totalRecords="total"
+            :rowsPerPageOptions="[18, 36, 54, 72]"
+            @page="handlePageChange"
+          />
+        </div>
+      </div>
+    </section>
+
+    <Dialog v-model:visible="showFormModal" modal :header="modalTitle" class="w-full sm:w-2/3 lg:w-1/2" @hide="resetForm">
       <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="submit">
         <div class="flex flex-col gap-1">
           <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">Ime</label>
@@ -162,46 +327,25 @@ onMounted(() => {
           <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">Jedinica</label>
           <input v-model="form.jedinica" type="text" class="rounded-xl border-slate-200 text-sm" />
         </div>
-        <div class="sm:col-span-2 flex items-center gap-3">
-          <button type="submit" class="btn-primary" :disabled="loading">{{ editingId ? 'Spremi promjene' : 'Dodaj' }}</button>
-          <button type="button" class="btn-secondary" @click="resetForm">Reset</button>
+        <div class="sm:col-span-2 mt-2 flex items-center justify-end gap-3">
+          <button type="button" class="btn-secondary" @click="closeFormModal">Odustani</button>
+          <button type="submit" class="btn-primary" :disabled="loading">
+            {{ editingId ? 'Spremi promjene' : 'Dodaj' }}
+          </button>
         </div>
       </form>
-    </section>
+    </Dialog>
 
-    <section>
-      <div v-if="loading" class="rounded-2xl border border-slate-200 bg-slate-50 p-10 text-center text-slate-500">Učitavanje…</div>
-      <div v-else-if="error" class="rounded-2xl border border-rose-200 bg-rose-50 p-10 text-center text-rose-700">{{ error }}</div>
-      <div v-else class="overflow-hidden rounded-2xl border border-slate-200">
-        <table class="min-w-full divide-y divide-slate-200 text-sm">
-          <thead class="bg-slate-100 text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th class="px-4 py-3 text-left">Ime i prezime</th>
-              <th class="px-4 py-3 text-left">God.</th>
-              <th class="px-4 py-3 text-left">Jedinica</th>
-              <th class="px-4 py-3 text-left">Akcije</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-200 bg-white">
-            <tr v-for="defender in defenders" :key="defender.id" class="hover:bg-slate-50">
-              <td class="px-4 py-3 text-slate-800">{{ defender.ime }} {{ defender.prezime }}</td>
-              <td class="px-4 py-3 text-slate-500">
-                {{ defender.godina_rođenja || '—' }} / {{ defender.godina_pogibije || '—' }}
-              </td>
-              <td class="px-4 py-3 text-slate-500">{{ defender.jedinica || '—' }}</td>
-              <td class="px-4 py-3">
-                <div class="flex gap-2">
-                  <button type="button" class="btn-secondary px-3 py-1 text-xs" @click="editDefender(defender)">Uredi</button>
-                  <button type="button" class="btn-secondary px-3 py-1 text-xs text-rose-600" @click="deleteDefender(defender.id)">
-                    Briši
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <Dialog v-model:visible="showDeleteDialog" modal header="Potvrda brisanja" class="w-full sm:w-80" @hide="cancelDelete">
+      <p class="text-sm text-slate-600">
+        Jeste li sigurni da želite obrisati
+        <strong>{{ defenderToDelete ? `${defenderToDelete.ime} ${defenderToDelete.prezime}` : 'ovog branitelja' }}</strong>?
+      </p>
+      <template #footer>
+        <button type="button" class="btn-secondary" @click="cancelDelete">Odustani</button>
+        <button type="button" class="btn-secondary text-rose-600" :disabled="loading" @click="performDelete">Obriši</button>
+      </template>
+    </Dialog>
   </div>
 </template>
 

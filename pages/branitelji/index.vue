@@ -1,24 +1,24 @@
 <script setup lang="ts">
 import { useDefenders } from '~/composables/useDefenders'
-const {
-  defenders,
-  filteredDefenders,
-  paginatedDefenders,
-  filters,
-  currentPage,
-  pageSize,
-  totalPages,
-  fetchDefenders,
-  loading,
-  error
-} = useDefenders()
+const defendersApi = useDefenders()
+const defenders = defendersApi.defenders
+const filters = defendersApi.filters
+const currentPage = defendersApi.currentPage
+const pageSize = defendersApi.pageSize
+const total = (defendersApi as any).total
+const totalPages = defendersApi.totalPages
+const from = (defendersApi as any).from
+const to = (defendersApi as any).to
+const hasActiveFilters = (defendersApi as any).hasActiveFilters
+const fetchDefenders = defendersApi.fetchDefenders
+const loading = defendersApi.loading
+const error = defendersApi.error
+const availableYears = (defendersApi as any).availableYears
 
 await fetchDefenders()
 
 const resetFilters = () => {
   filters.query = ''
-  filters.ime = ''
-  filters.prezime = ''
   filters.jedinica = null
   filters.godina_pogibije = null
   filters.status = null
@@ -44,7 +44,7 @@ const handlePageChange = (event: { page: number; rows: number }) => {
       </div>
     </header>
 
-    <DefenderFilterBar :filters="filters" :defenders="defenders" @reset="resetFilters" />
+    <DefenderFilterBar :filters="filters" :defenders="defenders" :years="availableYears" @reset="resetFilters" />
 
     <section>
       <div v-if="loading" class="rounded-3xl border border-primary/10 bg-white/80 p-10 text-center text-primary/70 shadow">
@@ -58,38 +58,25 @@ const handlePageChange = (event: { page: number; rows: number }) => {
           <span>
             Prikazano
             <strong>
-              {{
-                filteredDefenders.length
-                  ? (currentPage - 1) * pageSize + 1
-                  : 0
-              }}–{{
-                Math.min(currentPage * pageSize, filteredDefenders.length)
-              }}
+              {{ from }}–{{ to }}
             </strong>
-            od <strong>{{ filteredDefenders.length }}</strong> rezultata
-            (ukupno {{ defenders.length }} branitelja).
+            od <strong>{{ total }}</strong> rezultata.
           </span>
-          <span
-          v-if="filters.query || filters.jedinica || filters.godina_pogibije || filters.status"
-            class="inline-flex items-center gap-2 rounded-full bg-secondary/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-secondary"
-          >
+          <span v-if="hasActiveFilters" class="inline-flex items-center gap-2 rounded-full bg-secondary/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-secondary">
             Filtri su aktivni.
           </span>
         </div>
         <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          <DefenderCard v-for="defender in paginatedDefenders" :key="defender.id" :defender="defender" />
+          <DefenderCard v-for="defender in defenders" :key="defender.id" :defender="defender" />
         </div>
-        <div
-          v-if="!filteredDefenders.length"
-          class="rounded-3xl border border-primary/10 bg-white/80 p-10 text-center text-navy/60 shadow-inner"
-        >
+        <div v-if="!total" class="rounded-3xl border border-primary/10 bg-white/80 p-10 text-center text-navy/60 shadow-inner">
           Nema rezultata za odabrane kriterije.
         </div>
         <div v-else class="mt-8 flex justify-center">
           <Paginator
             :first="(currentPage - 1) * pageSize"
             :rows="pageSize"
-            :totalRecords="filteredDefenders.length"
+            :totalRecords="total"
             :rowsPerPageOptions="[9, 18, 27, 36]"
             @page="handlePageChange"
           />

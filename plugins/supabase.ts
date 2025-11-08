@@ -1,7 +1,5 @@
-import { defineNuxtPlugin, useRuntimeConfig } from 'nuxt/app'
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-
-type TypedSupabaseClient = SupabaseClient<Record<string, unknown>, 'public', Record<string, unknown>>
+import { defineNuxtPlugin, useRuntimeConfig } from '#app'
+import { createClient } from '@supabase/supabase-js'
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig()
@@ -15,10 +13,10 @@ export default defineNuxtPlugin(() => {
 
   const supabase = createClient(url, anonKey, {
     auth: {
-      persistSession: !process.server,
-      autoRefreshToken: !process.server
+      persistSession: process.client,
+      autoRefreshToken: process.client
     }
-  }) as TypedSupabaseClient
+  })
 
   return {
     provide: {
@@ -26,4 +24,5 @@ export default defineNuxtPlugin(() => {
     }
   }
 })
+
 

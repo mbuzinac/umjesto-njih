@@ -39,8 +39,14 @@ const yearOptions = computed(() => {
   return Array.from(years).sort((a, b) => a - b)
 })
 
+const BASE_STATUSES = ['missing', 'found']
+const STATUS_LABELS: Record<string, string> = {
+  missing: 'Nestao',
+  found: 'Pronađen'
+}
+
 const statusOptions = computed(() => {
-  const statuses = new Set<string>()
+  const statuses = new Set<string>(BASE_STATUSES)
   props.defenders.forEach((defender) => {
     if (defender.status) {
       statuses.add(defender.status)
@@ -80,10 +86,10 @@ const resetFilters = () => {
           <div class="relative">
             <select v-model="filters.status" class="select-field py-2">
               <option :value="null">Svi statusi</option>
-              <option value="missing">Nestao</option>
-              <option value="found">Pronađen</option>
+              <option value="missing">{{ STATUS_LABELS.missing }}</option>
+              <option value="found">{{ STATUS_LABELS.found }}</option>
               <option v-for="status in statusOptions" :key="status" :value="status">
-                {{ status }}
+                {{ STATUS_LABELS[status] ?? status }}
               </option>
             </select>
             <span class="select-arrow">

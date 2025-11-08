@@ -1,5 +1,5 @@
-import { ref, reactive, computed, watch } from 'vue'
-import { useFetch } from 'nuxt/app'
+import { ref, reactive, computed, watch, onScopeDispose, type Ref, type ComputedRef } from 'vue'
+import { useRequestFetch } from '#app'
 import type { Defender } from '~/types/models'
 
 interface DefenderFilters {
@@ -9,24 +9,69 @@ interface DefenderFilters {
   status?: string | null
 }
 
-export const useDefenders = () => {
+interface UseDefendersResult {
+  defenders: Ref<Defender[]>
+  loading: Ref<boolean>
+  error: Ref<string | null>
+  filters: DefenderFilters
+  pageSize: Ref<number>
+  currentPage: Ref<number>
+  total: Ref<number>
+  totalPages: ComputedRef<number>
+  from: ComputedRef<number>
+  to: ComputedRef<number>
+  hasActiveFilters: ComputedRef<boolean>
+  availableYears: Ref<number[]>
+  fetchDefenders: () => Promise<void>
+}
+
+export const useDefenders = (): UseDefendersResult => {
   const defenders = ref<Defender[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
-  const filters = reactive<DefenderFilters>({})
+  const filters = reactive<DefenderFilters>({
+    query: ''
+  })
   const pageSize = ref(18)
   const currentPage = ref(1)
+  const total = ref(0)
+  const availableYears = ref<number[]>([])
+  const requestFetch = useRequestFetch()
 
   const fetchDefenders = async () => {
     loading.value = true
     error.value = null
 
     try {
-      const { data, error: fetchError } = await useFetch<Defender[]>('/api/defenders')
-      if (fetchError.value) {
-        throw fetchError.value
+      const response = await requestFetch<{
+        items: Defender[]
+        total: number
+        page: number
+        pageSize: number
+      }>('/api/defenders', {
+        params: {
+          page: currentPage.value,
+          pageSize: pageSize.value,
+          q: filters.query || undefined,
+          status: filters.status || undefined,
+          jedinica: filters.jedinica || undefined,
+          godina: filters.godina_pogibije ?? undefined
+        }
+      })
+
+      defenders.value = response.items || []
+      total.value = response.total || 0
+      if (response.pageSize && response.pageSize !== pageSize.value) {
+        pageSize.value = response.pageSize
       }
-      defenders.value = data.value || []
+
+      const yearsSet = new Set<number>(availableYears.value)
+      defenders.value.forEach((defender) => {
+        if (defender.godina_pogibije) {
+          yearsSet.add(defender.godina_pogibije)
+        }
+      })
+      availableYears.value = Array.from(yearsSet).sort((a, b) => a - b)
     } catch (err) {
       error.value = (err as Error).message || 'Greška pri dohvaćanju.'
     } finally {
@@ -34,54 +79,74 @@ export const useDefenders = () => {
     }
   }
 
-  const filteredDefenders = computed(() => {
-    return defenders.value.filter((defender: Defender) => {
-      const normalizedIme = defender.ime?.toLowerCase() ?? ''
-      const normalizedPrezime = defender.prezime?.toLowerCase() ?? ''
+  const totalPages = computed(() => (total.value ? Math.ceil(total.value / pageSize.value) : 1))
 
-      const matchesQuery = filters.query
-        ? `${normalizedIme} ${normalizedPrezime}`.includes(filters.query.toLowerCase().trim())
-        : true
-
-      const matchesJedinica = filters.jedinica
-        ? defender.jedinica
-          ? defender.jedinica.toLowerCase().includes(filters.jedinica.toLowerCase())
-          : false
-        : true
-
-      const matchesGodina = filters.godina_pogibije
-        ? defender.godina_pogibije === filters.godina_pogibije
-        : true
-
-      const matchesStatus = filters.status
-        ? defender.status
-          ? defender.status.toLowerCase() === filters.status.toLowerCase()
-          : false
-        : true
-
-      return matchesQuery && matchesJedinica && matchesGodina && matchesStatus
-    })
+  const from = computed(() => {
+    if (!total.value) {
+      return 0
+    }
+    return (currentPage.value - 1) * pageSize.value + 1
   })
 
-  const totalPages = computed(() => Math.ceil(filteredDefenders.value.length / pageSize.value) || 1)
-
-  const paginatedDefenders = computed(() => {
-    const start = (currentPage.value - 1) * pageSize.value
-    return filteredDefenders.value.slice(start, start + pageSize.value)
+  const to = computed(() => {
+    if (!total.value) {
+      return 0
+    }
+    return Math.min(currentPage.value * pageSize.value, total.value)
   })
+
+  const hasActiveFilters = computed(() => {
+    return Boolean(
+      filters.query ||
+        filters.status ||
+        filters.jedinica ||
+        (filters.godina_pogibije !== null && filters.godina_pogibije !== undefined)
+    )
+  })
+
+  let queryDebounce: ReturnType<typeof setTimeout> | null = null
+
+  watch(
+    () => filters.query,
+    () => {
+      if (queryDebounce) {
+        clearTimeout(queryDebounce)
+      }
+      queryDebounce = setTimeout(() => {
+        if (currentPage.value !== 1) {
+          currentPage.value = 1
+        } else {
+          fetchDefenders()
+        }
+      }, 250)
+    }
+  )
 
   watch(
     () => ({
-      query: filters.query,
-      jedinica: filters.jedinica,
-      godina_pogibije: filters.godina_pogibije,
       status: filters.status,
-      total: filteredDefenders.value.length
+      jedinica: filters.jedinica,
+      godina_pogibije: filters.godina_pogibije
     }),
     () => {
-      currentPage.value = 1
-    }
+      if (currentPage.value !== 1) {
+        currentPage.value = 1
+      } else {
+        fetchDefenders()
+      }
+    },
+    { deep: true }
   )
+
+  watch([currentPage, pageSize], () => {
+    fetchDefenders()
+  })
+
+  onScopeDispose(() => {
+    if (queryDebounce) {
+      clearTimeout(queryDebounce)
+    }
+  })
 
   return {
     defenders,
@@ -90,9 +155,12 @@ export const useDefenders = () => {
     filters,
     pageSize,
     currentPage,
+    total,
     totalPages,
-    filteredDefenders,
-    paginatedDefenders,
+    from,
+    to,
+    hasActiveFilters,
+    availableYears,
     fetchDefenders
   }
 }

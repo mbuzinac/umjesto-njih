@@ -12,6 +12,12 @@ export default defineNuxtConfig({
     'primevue/resources/primevue.css',
     'primeicons/primeicons.css'
   ],
+  postcss: {
+    plugins: {
+      tailwindcss: {},
+      autoprefixer: {}
+    }
+  },
   app: {
     head: {
       title: 'Umjesto njih',
