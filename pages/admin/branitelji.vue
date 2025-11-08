@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
 import type { Defender } from '~/types/models'
 import { useAdminAuth } from '~/composables/useAdminAuth'
 
@@ -222,14 +221,38 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="flex flex-col gap-8">
-    <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h1 class="text-2xl font-semibold text-slate-900">Branitelji</h1>
-        <p class="text-sm text-slate-500">Dodaj, ažuriraj ili obriši zapise branitelja.</p>
-      </div>
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-        <InputText v-model="searchQuery" placeholder="Pretraži branitelje…" class="w-full sm:w-64" />
-        <button type="button" class="btn-primary w-full sm:w-auto" @click="openCreateModal">Dodaj branitelja</button>
+    <header class="rounded-3xl border border-primary/10 bg-white/95 p-6 shadow-lg shadow-primary/10">
+      <div class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div class="space-y-2">
+          <span class="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-primary">
+            Admin
+          </span>
+          <div class="space-y-1">
+            <h1 class="text-2xl font-bold text-primary sm:text-3xl">Upravljanje braniteljima</h1>
+            <p class="text-sm text-primary/70">Dodaj, ažuriraj ili obriši zapise branitelja.</p>
+          </div>
+        </div>
+        <div class="flex w-full flex-col gap-4 md:w-auto md:flex-row md:items-end md:gap-5">
+          <div class="flex min-w-[260px] flex-1 flex-col gap-2">
+            <label class="text-xs font-semibold uppercase tracking-wide text-primary/70">Traži branitelja</label>
+            <div class="relative">
+              <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-primary/40">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-4.35-4.35M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" />
+                </svg>
+              </span>
+              <input
+                v-model="searchQuery"
+                type="search"
+                placeholder="Ime ili prezime"
+                class="input-field input-field--with-icon"
+              />
+            </div>
+          </div>
+          <button type="button" class="btn-primary w-full md:w-auto" @click="openCreateModal">
+            Dodaj branitelja
+          </button>
+        </div>
       </div>
     </header>
 
