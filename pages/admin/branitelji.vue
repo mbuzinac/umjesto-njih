@@ -316,8 +316,15 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
-    <Dialog v-model:visible="showFormModal" modal :header="modalTitle" class="w-full sm:w-2/3 lg:w-1/2" @hide="resetForm">
-      <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="submit">
+    <Dialog
+      v-model:visible="showFormModal"
+      modal
+      :header="modalTitle"
+      class="w-[96vw] sm:w-2/3 lg:w-1/2"
+      contentClass="px-5 pb-6 sm:px-8"
+      @hide="resetForm"
+    >
+      <form class="grid grid-cols-2 gap-4" @submit.prevent="submit">
         <div class="flex flex-col gap-1">
           <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">Ime</label>
           <input v-model="form.ime" type="text" required class="rounded-xl border-slate-200 text-sm" />
@@ -342,15 +349,15 @@ onBeforeUnmount(() => {
           <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">Mjesto pogibije</label>
           <input v-model="form.mjesto_pogibije" type="text" class="rounded-xl border-slate-200 text-sm" />
         </div>
-        <div class="flex flex-col gap-1">
+        <div class="col-span-2 flex flex-col gap-1">
           <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">URL fotografije</label>
           <input v-model="form.fotka_url" type="url" class="rounded-xl border-slate-200 text-sm" />
         </div>
-        <div class="flex flex-col gap-1">
+        <div class="col-span-2 flex flex-col gap-1">
           <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">Jedinica</label>
           <input v-model="form.jedinica" type="text" class="rounded-xl border-slate-200 text-sm" />
         </div>
-        <div class="sm:col-span-2 mt-2 flex items-center justify-end gap-3">
+        <div class="col-span-2 mt-2 flex items-center justify-end gap-3">
           <button type="button" class="btn-secondary" @click="closeFormModal">Odustani</button>
           <button type="submit" class="btn-primary" :disabled="loading">
             {{ editingId ? 'Spremi promjene' : 'Dodaj' }}
@@ -359,7 +366,14 @@ onBeforeUnmount(() => {
       </form>
     </Dialog>
 
-    <Dialog v-model:visible="showDeleteDialog" modal header="Potvrda brisanja" class="w-full sm:w-80" @hide="cancelDelete">
+    <Dialog
+      v-model:visible="showDeleteDialog"
+      modal
+      header="Potvrda brisanja"
+      class="w-[90vw] sm:w-80"
+      contentClass="px-5 pb-5 sm:px-6"
+      @hide="cancelDelete"
+    >
       <p class="text-sm text-slate-600">
         Jeste li sigurni da želite obrisati
         <strong>{{ defenderToDelete ? `${defenderToDelete.ime} ${defenderToDelete.prezime}` : 'ovog branitelja' }}</strong>?

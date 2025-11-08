@@ -117,8 +117,9 @@ const hasAdditionalFilters = computed(() => {
       v-model:visible="showFilters"
       modal
       header="Dodatni filteri"
-      class="w-full sm:w-3/4 md:w-1/2"
+      class="w-[95vw] sm:w-3/4 md:w-1/2"
       :dismissableMask="true"
+      contentClass="px-5 pb-6 sm:px-8"
       @hide="closeFilters"
     >
       <div class="grid gap-4 sm:grid-cols-2">
