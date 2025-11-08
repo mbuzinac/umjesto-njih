@@ -7,19 +7,6 @@
     aria-label="Vukovarski vodotoranj"
   >
     <defs>
-      <filter id="tower-clean" color-interpolation-filters="sRGB">
-        <feColorMatrix
-          type="matrix"
-          values="
-            -1 0 0 0 1
-             0 -1 0 0 1
-             0 0 -1 0 1
-             0 0 0 1 0
-          "
-        />
-        <feColorMatrix type="hueRotate" values="180" />
-        <feColorMatrix type="saturate" values="1.4" />
-      </filter>
       <clipPath id="tower-circle">
         <circle cx="32" cy="32" r="28" />
       </clipPath>
@@ -32,8 +19,7 @@
         y="8"
         width="44"
         height="52"
-        href="/icons/vukovar-tower.png"
-        filter="url(#tower-clean)"
+        href="/icons/vukovar-tower-white-64.png"
         preserveAspectRatio="xMidYMin meet"
       />
     </g>
