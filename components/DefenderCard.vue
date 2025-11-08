@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { DEFENDER_PLACEHOLDER_IMAGE } from '~/constants/images'
 import type { Defender } from '~/types/models'
 
 const props = defineProps<{ defender: Defender }>()
@@ -14,19 +15,44 @@ const statusLabel = computed(() => {
       return null
   }
 })
+
+const imageSrc = computed(() => {
+  const rawUrl = (props.defender.fotka_url || '').trim()
+  return rawUrl.length ? rawUrl : DEFENDER_PLACEHOLDER_IMAGE
+})
+
+const isPlaceholder = computed(() => imageSrc.value === DEFENDER_PLACEHOLDER_IMAGE)
+
+const initials = computed(() => {
+  const first = props.defender.ime?.charAt(0) ?? ''
+  const last = props.defender.prezime?.charAt(0) ?? ''
+  return `${first}${last}`.trim()
+})
 </script>
 
 <template>
   <article class="group flex flex-col overflow-hidden rounded-3xl border border-primary/10 bg-white/95 shadow-lg shadow-primary/10 transition hover:-translate-y-1 hover:shadow-primary/20">
     <div class="relative h-56 w-full overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5">
       <img
-        v-if="props.defender.fotka_url"
-        :src="props.defender.fotka_url"
+        :src="imageSrc"
         :alt="`${props.defender.ime} ${props.defender.prezime}`"
         class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+        :class="{
+          'object-top brightness-125 contrast-90 saturate-75 opacity-90': isPlaceholder,
+        }"
+        loading="lazy"
       />
-      <div v-else class="flex h-full items-center justify-center text-5xl font-semibold text-primary/30">
-        {{ props.defender.ime.charAt(0) }}{{ props.defender.prezime.charAt(0) }}
+      <div
+        v-if="isPlaceholder"
+        class="absolute inset-0 bg-white/55 backdrop-blur-[2px]"
+        aria-hidden="true"
+      />
+      <div
+        v-if="isPlaceholder && initials"
+        class="absolute inset-0 flex items-center justify-center text-5xl font-semibold text-primary/80 drop-shadow-sm"
+        aria-hidden="true"
+      >
+        {{ initials }}
       </div>
       <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy/80 to-transparent p-4 text-white">
         <p class="text-xs uppercase tracking-[0.3em] text-white/70">Jedinica</p>

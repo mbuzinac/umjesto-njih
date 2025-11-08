@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { createError, useFetch, useRoute } from 'nuxt/app'
 import type { Defender } from '~/types/models'
 import { useMemories } from '~/composables/useMemories'
+import { DEFENDER_PLACEHOLDER_IMAGE } from '~/constants/images'
 
 const route = useRoute()
 const id = route.params.id as string
@@ -15,6 +17,19 @@ if (!defender.value && error.value) {
 const { memories, loading: memoriesLoading, fetchMemories } = useMemories(id)
 
 await fetchMemories()
+
+const imageSrc = computed(() => {
+  const rawUrl = (defender.value?.fotka_url || '').trim()
+  return rawUrl.length ? rawUrl : DEFENDER_PLACEHOLDER_IMAGE
+})
+
+const isPlaceholder = computed(() => imageSrc.value === DEFENDER_PLACEHOLDER_IMAGE)
+
+const initials = computed(() => {
+  const first = defender.value?.ime?.charAt(0) ?? ''
+  const last = defender.value?.prezime?.charAt(0) ?? ''
+  return `${first}${last}`.trim()
+})
 </script>
 
 <template>
@@ -26,15 +41,27 @@ await fetchMemories()
   </div>
   <div v-else-if="defender" class="flex flex-col gap-12">
     <section class="grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-      <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg">
+      <div class="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg">
         <img
-          v-if="defender.fotka_url"
-          :src="defender.fotka_url"
+          :src="imageSrc"
           :alt="`${defender.ime} ${defender.prezime}`"
           class="h-96 w-full object-cover"
+          :class="{
+            'object-top brightness-125 contrast-90 saturate-75 opacity-90': isPlaceholder,
+          }"
+          loading="lazy"
         />
-        <div v-else class="flex h-96 items-center justify-center text-6xl font-semibold text-slate-300">
-          {{ defender.ime.charAt(0) }}{{ defender.prezime.charAt(0) }}
+        <div
+          v-if="isPlaceholder"
+          class="absolute inset-0 bg-white/55 backdrop-blur-[2px]"
+          aria-hidden="true"
+        />
+        <div
+          v-if="isPlaceholder && initials"
+          class="absolute inset-0 flex items-center justify-center text-6xl font-semibold text-primary/80 drop-shadow-sm"
+          aria-hidden="true"
+        >
+          {{ initials }}
         </div>
       </div>
       <div class="space-y-6">
