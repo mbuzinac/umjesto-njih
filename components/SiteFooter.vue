@@ -6,7 +6,7 @@
         <p>Čuvamo imena i priče vukovarskih branitelja.</p>
       </div>
       <div class="space-y-1 text-xs uppercase tracking-[0.35em] text-primary/60">
-        <p class="text-primary/80">Nastalo u zajednici SKAC Osijek</p>
+        <p class="text-primary/80">Nastalo u zajednici SKAC-Osijek</p>
         <p>Za nas živote dali</p>
       </div>
     </div>
